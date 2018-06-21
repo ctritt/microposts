@@ -2,7 +2,7 @@ const UI = (function(){
 
   const Selectors = {
     post: '#posts',
-    titleInput: 'titleInput',
+    titleInput: '#title',
     postBody: '#body',
     postId: '#id',
     submitBtn: '.post-submit'
@@ -29,8 +29,15 @@ const UI = (function(){
     return output;
   }
 
+  const clearAlert = function() {
+    const currentAlert = document.querySelector('.alert');
+      if (currentAlert) {
+        currentAlert.remove();
+      }
+  }
+
   return{
-    showPosts: function(posts) {
+    showPosts: (posts) => {
       let output = '';
       posts.forEach((post) => {
         output += postHtml(post);
@@ -38,9 +45,36 @@ const UI = (function(){
       });
       document.querySelector(Selectors.post).innerHTML = output;
     },
-    showPostResponse: function(){
+    showPostResponse: () => {
       let output = postHtml(post);
       document.querySelector(Selectors.post).insertAdjacentHTML('beforeend', output);
+    },
+    clearFields: () => {
+      document.querySelector(Selectors.titleInput).value = '';
+      document.querySelector(Selectors.postBody).value = '';
+    },
+    showAlert: (message, className) => {
+      clearAlert();
+
+      // Create div
+      const div = document.createElement('div');
+      // Add classes
+      div.className = className;
+      // Add text
+      if (className === 'alert alert-success'){
+        message += ' ✧*｡٩(ˊᗜˋ*)و✧*｡'
+      }
+      div.appendChild(document.createTextNode(`${message}`));
+      // Get parent
+      const container = document.querySelector('.postsContainer');
+      // Get posts
+      const posts = document.querySelector('#posts');
+      // Insert alert div
+      container.insertBefore(div, posts);
+
+      setTimeout(() => {
+        clearAlert();
+      }, 3000); 
     }
   }
 })();

@@ -9048,8 +9048,337 @@ module.exports = function (regExp, replace) {
 "use strict";
 
 
-var greeting = 'Hello World';
-console.log(greeting);
+var _http = __webpack_require__(329);
+
+var _ui = __webpack_require__(330);
+
+var Selectors = function () {
+  return {
+    titleInput: '#title',
+    bodyInput: '#body',
+    postBtn: '.post-submit',
+    posts: '#posts'
+  };
+}();
+
+var App = function (Selectors) {
+
+  var addEventHandlers = function addEventHandlers() {
+    // Get posts on DOM load
+    document.addEventListener('DOMContentLoaded', getPosts);
+    // Listen for add post
+    document.querySelector('.post-submit').addEventListener('click', submitPost);
+    document.querySelector(Selectors.posts).addEventListener('click', editPosts);
+  };
+
+  var getPosts = function getPosts() {
+    _http.http.get('http://localhost:3000/posts').then(function (data) {
+      return _ui.ui.showPosts(data);
+    }).catch(function (err) {
+      return console.log(err);
+    });
+  };
+
+  // Add Post
+  var submitPost = function submitPost() {
+    var title = document.querySelector(Selectors.titleInput).value;
+    var body = document.querySelector(Selectors.bodyInput).value;
+    var data = {
+      title: title,
+      body: body
+
+      // Create Post
+    };_http.http.post('http://localhost:3000/posts', data).then(function (data) {
+      console.log(data);
+      getPosts();
+    }).catch(function (err) {
+      return console.log(err);
+    });
+  };
+
+  var editPosts = function editPosts(evt) {
+    if (evt.target.classList.contains('delete')) {
+      console.log('delete...');
+    }
+    if (evt.target.classList.contains('edit')) {
+      console.log('edit...');
+    }
+  };
+
+  return {
+    init: function init() {
+      addEventHandlers();
+    }
+  };
+}(Selectors);
+
+App.init();
+
+/***/ }),
+/* 329 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var EasyHTTP = function () {
+  function EasyHTTP() {
+    _classCallCheck(this, EasyHTTP);
+  }
+
+  _createClass(EasyHTTP, [{
+    key: 'get',
+
+
+    // GET HTTP Request
+    value: function () {
+      var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(url) {
+        var request, response;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.next = 2;
+                return fetch(url);
+
+              case 2:
+                request = _context.sent;
+                _context.next = 5;
+                return request;
+
+              case 5:
+                response = _context.sent;
+
+                if (!(response.status === 200)) {
+                  _context.next = 10;
+                  break;
+                }
+
+                return _context.abrupt('return', response.json());
+
+              case 10:
+                return _context.abrupt('return', Promise.reject(response.status));
+
+              case 11:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function get(_x) {
+        return _ref.apply(this, arguments);
+      }
+
+      return get;
+    }()
+  }, {
+    key: 'post',
+    value: function () {
+      var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(url, data) {
+        var req, response;
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.next = 2;
+                return fetch(url, {
+                  method: 'POST',
+                  headers: {
+                    'Content-type': 'application/json'
+                  },
+                  body: JSON.stringify(data)
+                });
+
+              case 2:
+                req = _context2.sent;
+                _context2.next = 5;
+                return req;
+
+              case 5:
+                response = _context2.sent;
+
+                if (!(response.status === 201)) {
+                  _context2.next = 10;
+                  break;
+                }
+
+                return _context2.abrupt('return', response.json());
+
+              case 10:
+                return _context2.abrupt('return', Promise.reject(response.status));
+
+              case 11:
+              case 'end':
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function post(_x2, _x3) {
+        return _ref2.apply(this, arguments);
+      }
+
+      return post;
+    }()
+  }, {
+    key: 'put',
+    value: function () {
+      var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(url, data) {
+        var req, response;
+        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                _context3.next = 2;
+                return fetch(url, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-type': 'application/json'
+                  },
+                  body: JSON.stringify(data)
+                });
+
+              case 2:
+                req = _context3.sent;
+                _context3.next = 5;
+                return req;
+
+              case 5:
+                response = _context3.sent;
+
+                if (!(response.status === 200)) {
+                  _context3.next = 10;
+                  break;
+                }
+
+                return _context3.abrupt('return', response.json());
+
+              case 10:
+                return _context3.abrupt('return', Promise.reject(response.status));
+
+              case 11:
+              case 'end':
+                return _context3.stop();
+            }
+          }
+        }, _callee3, this);
+      }));
+
+      function put(_x4, _x5) {
+        return _ref3.apply(this, arguments);
+      }
+
+      return put;
+    }()
+  }, {
+    key: 'delete',
+    value: function () {
+      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(url) {
+        var req, response;
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                _context4.next = 2;
+                return fetch(url, {
+                  method: 'DELETE'
+                });
+
+              case 2:
+                req = _context4.sent;
+                _context4.next = 5;
+                return req;
+
+              case 5:
+                response = _context4.sent;
+
+                if (!(response.status === 200)) {
+                  _context4.next = 10;
+                  break;
+                }
+
+                return _context4.abrupt('return', 'Item deleted successfully');
+
+              case 10:
+                return _context4.abrupt('return', Promise.reject(response.status));
+
+              case 11:
+              case 'end':
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this);
+      }));
+
+      function _delete(_x6) {
+        return _ref4.apply(this, arguments);
+      }
+
+      return _delete;
+    }()
+  }]);
+
+  return EasyHTTP;
+}();
+
+var http = exports.http = new EasyHTTP();
+
+/***/ }),
+/* 330 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var UI = function () {
+
+  var Selectors = {
+    post: '#posts',
+    titleInput: 'titleInput',
+    postBody: '#body',
+    postId: '#id',
+    submitBtn: '.post-submit'
+  };
+
+  var forState = 'add';
+
+  var postHtml = function postHtml(post) {
+    var output = '\n      <div class="card mb-3">\n        <div class="card-body">\n          <h4 class="card-title">' + post.title + '</h4>\n          <hr>\n          <p class="card-text">' + post.body + '</p>\n          <a href="#" class="edit card-link" data-id="' + post.id + '">\n            <i class="fa fa-pencil"></i>\n          </a>\n          <a href="#" class="delete card-link" data-id="' + post.id + '">\n            <i class="fa fa-remove"></i>\n          </a>\n        </div>\n      </div>\n    ';
+    return output;
+  };
+
+  return {
+    showPosts: function showPosts(posts) {
+      var output = '';
+      posts.forEach(function (post) {
+        output += postHtml(post);
+      });
+      document.querySelector(Selectors.post).innerHTML = output;
+    },
+    showPostResponse: function showPostResponse() {
+      var output = postHtml(post);
+      document.querySelector(Selectors.post).insertAdjacentHTML('beforeend', output);
+    }
+  };
+}();
+
+var ui = exports.ui = UI;
 
 /***/ })
 /******/ ]);
