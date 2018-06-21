@@ -9052,67 +9052,92 @@ var _http = __webpack_require__(329);
 
 var _ui = __webpack_require__(330);
 
-var Selectors = function () {
-  return {
-    titleInput: '#title',
-    bodyInput: '#body',
-    postBtn: '.post-submit',
-    posts: '#posts'
+// Get posts on DOM load
+document.addEventListener('DOMContentLoaded', getPosts);
+// Listen for add post
+document.querySelector('.post-submit').addEventListener('click', submitPost);
+document.querySelector('#posts').addEventListener('click', deletePost);
+document.querySelector('#posts').addEventListener('click', enableEdit);
+document.querySelector('.card-form').addEventListener('click', cancelEdit);
+
+function getPosts() {
+  _http.http.get('http://localhost:3000/posts').then(function (data) {
+    return _ui.ui.showPosts(data);
+  }).catch(function (err) {
+    return console.log(err);
+  });
+}
+
+// Add Post
+function submitPost() {
+  var title = document.querySelector('#title').value;
+  var body = document.querySelector('#body').value;
+  var id = document.querySelector('#id').value;
+
+  var data = {
+    title: title,
+    body: body
   };
-}();
 
-var App = function (Selectors) {
+  if (title === '' || body === '') {
+    _ui.ui.showAlert('Invalid title/body', 'alert alert-danger');
+  } else {
 
-  var addEventHandlers = function addEventHandlers() {
-    // Get posts on DOM load
-    document.addEventListener('DOMContentLoaded', getPosts);
-    // Listen for add post
-    document.querySelector('.post-submit').addEventListener('click', submitPost);
-    document.querySelector(Selectors.posts).addEventListener('click', editPosts);
-  };
-
-  var getPosts = function getPosts() {
-    _http.http.get('http://localhost:3000/posts').then(function (data) {
-      return _ui.ui.showPosts(data);
-    }).catch(function (err) {
-      return console.log(err);
-    });
-  };
-
-  // Add Post
-  var submitPost = function submitPost() {
-    var title = document.querySelector(Selectors.titleInput).value;
-    var body = document.querySelector(Selectors.bodyInput).value;
-    var data = {
-      title: title,
-      body: body
-
+    // Check for ID
+    if (id === '') {
       // Create Post
-    };_http.http.post('http://localhost:3000/posts', data).then(function (data) {
-      console.log(data);
-      getPosts();
+      _http.http.post('http://localhost:3000/posts', data).then(function (data) {
+        _ui.ui.showPostResponse(data);
+        _ui.ui.showAlert('Post Added', 'alert alert-success');
+        _ui.ui.clearFields();
+      }).catch(function (err) {
+        return console.log(err);
+      });
+    } else {
+      // Update the post
+      _http.http.put('http://localhost:3000/posts/' + id, data).then(function (data) {
+        console.log(data);
+        _ui.ui.showAlert('Post updated', 'alert alert-success');
+        _ui.ui.changeFormState('add');
+        getPosts();
+      }).catch(function (err) {
+        return console.log(err);
+      });
+    }
+  }
+}
+
+function deletePost(evt) {
+  if (evt.target.parentElement.classList.contains('delete')) {
+    var id = evt.target.parentElement.dataset.id;
+
+    _http.http.delete('http://localhost:3000/posts/' + id).then(function () {
+      return _ui.ui.removePostById(id);
     }).catch(function (err) {
       return console.log(err);
     });
-  };
+  }
+  evt.preventDefault();
+}
 
-  var editPosts = function editPosts(evt) {
-    if (evt.target.classList.contains('delete')) {
-      console.log('delete...');
-    }
-    if (evt.target.classList.contains('edit')) {
-      console.log('edit...');
-    }
-  };
+function enableEdit(evt) {
+  if (evt.target.parentElement.classList.contains('edit')) {
+    var id = evt.target.parentElement.dataset.id;
+    _http.http.get('http://localhost:3000/posts/' + id).then(function (data) {
+      return _ui.ui.fillForm(data);
+    }).catch(function (err) {
+      return console.log(err.message);
+    });
+  }
+  evt.preventDefault();
+}
 
-  return {
-    init: function init() {
-      addEventHandlers();
-    }
-  };
-}(Selectors);
-
-App.init();
+function cancelEdit(evt) {
+  if (evt.target.classList.contains('post-cancel')) {
+    _ui.ui.changeFormState('add');
+  }
+  evt.preventDefault();
+}
 
 /***/ }),
 /* 329 */
@@ -9346,39 +9371,170 @@ var http = exports.http = new EasyHTTP();
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var UI = function () {
+  function UI() {
+    _classCallCheck(this, UI);
 
-  var Selectors = {
-    post: '#posts',
-    titleInput: 'titleInput',
-    postBody: '#body',
-    postId: '#id',
-    submitBtn: '.post-submit'
-  };
+    this.titleInput = document.querySelector('#title');
+    this.posts = document.querySelector('#posts');
+    this.postBody = document.querySelector('#body');
+    this.postId = document.querySelector('#id');
+    this.submitBtn = document.querySelector('.post-submit');
+    this.forState = 'add';
+  }
 
-  var forState = 'add';
-
-  var postHtml = function postHtml(post) {
-    var output = '\n      <div class="card mb-3">\n        <div class="card-body">\n          <h4 class="card-title">' + post.title + '</h4>\n          <hr>\n          <p class="card-text">' + post.body + '</p>\n          <a href="#" class="edit card-link" data-id="' + post.id + '">\n            <i class="fa fa-pencil"></i>\n          </a>\n          <a href="#" class="delete card-link" data-id="' + post.id + '">\n            <i class="fa fa-remove"></i>\n          </a>\n        </div>\n      </div>\n    ';
-    return output;
-  };
-
-  return {
-    showPosts: function showPosts(posts) {
+  _createClass(UI, [{
+    key: 'showPosts',
+    value: function showPosts(posts) {
       var output = '';
       posts.forEach(function (post) {
-        output += postHtml(post);
+        output += '\n        <div class="card mb-3">\n          <div class="card-body">\n            <h4 class="card-title">' + post.title + '</h4>\n            <hr>\n            <p class="card-text">' + post.body + '</p>\n            <a href="#" class="edit card-link" data-id="' + post.id + '">\n              <i class="fa fa-pencil"></i>\n            </a>\n            <a href="#" class="delete card-link" data-id="' + post.id + '">\n              <i class="fa fa-remove"></i>\n            </a>\n          </div>\n        </div>\n        ';
       });
-      document.querySelector(Selectors.post).innerHTML = output;
-    },
-    showPostResponse: function showPostResponse() {
-      var output = postHtml(post);
-      document.querySelector(Selectors.post).insertAdjacentHTML('beforeend', output);
+      this.posts.innerHTML = output;
     }
-  };
+  }, {
+    key: 'showPostResponse',
+    value: function showPostResponse(post) {
+      var output = '\n      <div class="card mb-3">\n        <div class="card-body">\n          <h4 class="card-title">' + post.title + '</h4>\n          <hr>\n          <p class="card-text">' + post.body + '</p>\n          <a href="#" class="edit card-link" data-id="' + post.id + '">\n            <i class="fa fa-pencil"></i>\n          </a>\n          <a href="#" class="delete card-link" data-id="' + post.id + '">\n            <i class="fa fa-remove"></i>\n          </a>\n        </div>\n      </div>\n    ';
+      this.posts.insertAdjacentHTML('beforeend', output);
+    }
+  }, {
+    key: 'removePostById',
+    value: function removePostById(postId) {
+      var posts = document.querySelectorAll('[data-id]');
+      var found = void 0;
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = posts[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var post = _step.value;
+
+          if (post.dataset.id === postId) {
+            found = post;
+            break;
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      if (found) {
+        found.parentElement.parentElement.remove();
+      }
+    }
+  }, {
+    key: 'showAlert',
+    value: function showAlert(message, className) {
+      var _this = this;
+
+      this.clearAlert();
+
+      // Create div
+      var div = document.createElement('div');
+      // Add classes
+      div.className = className;
+      // Add text
+      if (className === 'alert alert-success') {
+        message += ' ✧*｡٩(ˊᗜˋ*)و✧*｡';
+      }
+      div.appendChild(document.createTextNode('' + message));
+      // Get parent
+      var container = document.querySelector('.postsContainer');
+      // Get posts
+      var posts = document.querySelector('#posts');
+      // Insert alert div
+      container.insertBefore(div, posts);
+
+      setTimeout(function () {
+        _this.clearAlert();
+      }, 3000);
+    }
+  }, {
+    key: 'fillForm',
+    value: function fillForm(data) {
+      this.titleInput.value = data.title;
+      this.postBody.value = data.body;
+      this.postId.value = data.id;
+
+      this.changeFormState('edit');
+    }
+  }, {
+    key: 'changeFormState',
+    value: function changeFormState(type) {
+      if (type === 'edit') {
+        this.submitBtn.textContent = 'Update Post';
+        this.submitBtn.className = 'post-submit btn btn-warning btn-block';
+
+        // Create cancel button
+        var button = document.createElement('button');
+        button.className = 'post-cancel btn btn-light btn-block';
+        button.appendChild(document.createTextNode('Cancel Edit'));
+
+        var cardForm = document.querySelector('.card-form');
+        var formEnd = document.querySelector('.form-end');
+
+        cardForm.insertBefore(button, formEnd);
+      }
+      if (type === 'add') {
+        this.submitBtn.textContent = 'Post It';
+        this.submitBtn.className = 'post-submit btn btn-primary btn-block';
+
+        //Hide the cancel button
+        var cancelUpdateBtn = document.querySelector('.post-cancel');
+        if (cancelUpdateBtn) {
+          cancelUpdateBtn.remove();
+        }
+
+        // Clear ID from hidden field
+        this.clearIdInput();
+
+        // Clear the text fields
+        this.clearFields();
+      }
+    }
+  }, {
+    key: 'clearIdInput',
+    value: function clearIdInput() {
+      this.postId.value = '';
+    }
+  }, {
+    key: 'clearFields',
+    value: function clearFields() {
+      this.titleInput.value = '';
+      this.postBody.value = '';
+    }
+  }, {
+    key: 'clearAlert',
+    value: function clearAlert() {
+      var currentAlert = document.querySelector('.alert');
+      if (currentAlert) {
+        currentAlert.remove();
+      }
+    }
+  }]);
+
+  return UI;
 }();
 
-var ui = exports.ui = UI;
+var ui = exports.ui = new UI();
 
 /***/ })
 /******/ ]);
